@@ -242,23 +242,18 @@ ORDER BY SUM(amount);
 USE Sakila;
 
 SELECT store_id, city, country
-FROM (SELECT store_id, city_id 
-	FROM store
-    JOIN address
-    ON store.address_id = address.address_id) as tabl
-JOIN (SELECT.address_id, city, country
-    FROM city
-    JOIN country
-    ON city.country_id = country.country_id) as tab2
-ON tab1.city_id=tab2.city_id    
-;    
+FROM store s
+JOIN address a ON s.address_id = a.address_id
+JOIN city c ON c.city_id = a.city_id
+JOIN country cn ON c.country_id = cn.country_id
+;   
 
 -- 7h. List the top five genres in gross revenue in descending order. (Hint: you may need to use the following 
 -- tables: category, film_category, inventory, payment, and rental.)
 
 USE Sakila;
 
-SELECT name, sum(revenue)
+SELECT name, sum(revenue) as gross_revenue
 FROM (SELECT film_id, revenue
     FROM inventory
     JOIN (SELECT inventory_id, sum(amount) as revenue 
@@ -274,7 +269,8 @@ ON film.film_id = film_category.film_id
 JOIN category
 ON category.category_id = film_category.category_id
 GROUP BY name
-ORDER    
+ORDER BY gross_revenue DESC
+LIMIT 5
 
 
 -- 8a. In your new role as an executive, you would like to have an easy way of 
@@ -284,24 +280,30 @@ ORDER
 
 USE Sakila;
 
-CREATE VIEW top_five_grossing_genres AS
+CREATE VIEW top_five_grossing_genres_2 AS
 
-SELECT name, SUM(p.amount)
+SELECT name, SUM(p.amount) sum_amount
 FROM category c
 INNER JOIN film_category fc
+ON c.category_id = fc.category_id
 INNER JOIN inventory i
 ON i.film_id = fc.film_id
 INNER JOIN rental r
 ON r.inventory_id = i.inventory_id
 INNER JOIN payment p
+ON r.rental_id = p.rental_id
 GROUP BY name
+ORDER BY sum_amount DESC
 LIMIT 5;
 
 -- 8b. How would you display the view that you created in 8a?
 
-SELECT * FROM `top 5 GROSS Category`;
+SELECT * FROM top_five_grossing_genres_2;
 
 -- 8c. You find that you no longer need the view top_five_genres. 
 -- Write a query to delete it.
 
-DROP VIEW `Top 5 Gross Category` ;
+DROP VIEW top_five_grossing_genres_2;
+
+
+
